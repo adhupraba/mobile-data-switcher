@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Protect Shizuku and Hidden API Bypass
+-keep class rikka.shizuku.** { *; }
+-keep class dev.rikka.shizuku.** { *; }
+-keep class org.lsposed.hiddenapibypass.** { *; }
+-keep class com.adhupraba.mobiledataswitcher.** { *; }
