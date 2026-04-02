@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     
     environment: 
-      name: production
+      name: release
       
     steps:
       - name: Checkout Code
