@@ -52,20 +52,35 @@ jobs:
       - name: Build Unsigned Release APK
         run: ./gradlew assembleRelease
 
-      - name: Visually Sign APK with GitHub Secrets
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildToolsVersion: 34.0.0
-
-      - name: Rename Signed Artifact
+      - name: Setup Keystore & Sign APK Natively
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
-          mv "${{steps.sign_app.outputs.signedReleaseFile}}" mobile-data-switcher-release.apk
+          # Dynamically locate the latest Android Build Tools installed on the Github Runner
+          BUILD_TOOLS_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -n 1)
+          APKSIGNER="/usr/local/lib/android/sdk/build-tools/${BUILD_TOOLS_VERSION}/apksigner"
+          ZIPALIGN="/usr/local/lib/android/sdk/build-tools/${BUILD_TOOLS_VERSION}/zipalign"
+          
+          echo "Using Android Build Tools $BUILD_TOOLS_VERSION"
+
+          # 1. Safely decode the base64 Secret into a temporary physical .jks file format
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+
+          # 2. Re-align the bytecode to meet Android OS compliance rules
+          $ZIPALIGN -p -f -v 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+
+          # 3. Cryptographically seal the APK using your dynamically loaded keystore
+          $APKSIGNER sign --ks keystore.jks \
+            --ks-pass "env:STORE_PASSWORD" \
+            --key-pass "env:KEY_PASSWORD" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --out mobile-data-switcher-release.apk aligned.apk
+          
+          # Clean up the raw keystore from memory just to be safe
+          rm keystore.jks
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
