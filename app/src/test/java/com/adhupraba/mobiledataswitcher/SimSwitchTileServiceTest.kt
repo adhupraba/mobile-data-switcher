@@ -19,7 +19,6 @@ import rikka.shizuku.Shizuku
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE]) // Android 14
 class SimSwitchTileServiceTest {
-
     private lateinit var service: SimSwitchTileService
     private lateinit var mockTile: Tile
 
@@ -132,7 +131,6 @@ class SimSwitchTileServiceTest {
         // But the delay triggered updateTileState(), which hits the branch.
     }
 
-
     @Test
     fun `onClick failed switch triggers error log`() {
         // Arrange
@@ -193,4 +191,3 @@ class SimSwitchTileServiceTest {
         verify { mockTile.updateTile() }
     }
 }
-

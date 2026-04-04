@@ -12,14 +12,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import rikka.shizuku.Shizuku
 import rikka.shizuku.SystemServiceHelper
-import org.lsposed.hiddenapibypass.HiddenApiBypass
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE]) // Android 14
 class SimManagerTest {
-
     private lateinit var mockContext: Context
     private lateinit var mockSubscriptionManager: SubscriptionManager
 
@@ -27,9 +24,9 @@ class SimManagerTest {
     fun setUp() {
         mockContext = mockk(relaxed = true)
         mockSubscriptionManager = mockk(relaxed = true)
-        
+
         every { mockContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) } returns mockSubscriptionManager
-        
+
         // Mock static Android logs
         mockkStatic(android.util.Log::class)
         every { android.util.Log.e(any(), any(), any()) } returns 0

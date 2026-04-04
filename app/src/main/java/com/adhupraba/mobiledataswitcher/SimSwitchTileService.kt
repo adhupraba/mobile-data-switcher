@@ -9,7 +9,6 @@ import android.util.Log
 import rikka.shizuku.Shizuku
 
 class SimSwitchTileService : TileService() {
-
     override fun onStartListening() {
         super.onStartListening()
         updateTileState()
@@ -25,7 +24,10 @@ class SimSwitchTileService : TileService() {
         if (!Shizuku.pingBinder()) {
             var retries = 0
             while (!Shizuku.pingBinder() && retries < 15) {
-                try { Thread.sleep(50) } catch (e: Exception) {}
+                try {
+                    Thread.sleep(50)
+                } catch (e: Exception) {
+                }
                 retries++
             }
             if (!Shizuku.pingBinder()) {
@@ -80,7 +82,11 @@ class SimSwitchTileService : TileService() {
         }
     }
 
-    private fun updateTile(state: Int, label: String, subtitle: String?) {
+    private fun updateTile(
+        state: Int,
+        label: String,
+        subtitle: String?,
+    ) {
         val tile = qsTile
         if (tile != null) {
             tile.state = state

@@ -8,13 +8,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,19 +24,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adhupraba.mobiledataswitcher.ui.theme.MobileDataSwitcherTheme
 import rikka.shizuku.Shizuku
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
+    private val permissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+        ) {
+            // Will be updated via launched effect
+        }
 
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) {
-        // Will be updated via launched effect
-    }
-
-    private val shizukuListener = Shizuku.OnRequestPermissionResultListener { _, _ ->
-        // Handle result
-    }
+    private val shizukuListener =
+        Shizuku.OnRequestPermissionResultListener { _, _ ->
+            // Handle result
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MainScreen(
                         modifier = Modifier.padding(innerPadding),
-                        activity = this
+                        activity = this,
                     )
                 }
             }
@@ -62,61 +62,69 @@ class MainActivity : ComponentActivity() {
     }
 
     fun requestPhoneState() {
-        permissionLauncher.launch(arrayOf(
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_PHONE_NUMBERS
-        ))
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_PHONE_NUMBERS,
+            ),
+        )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, activity: MainActivity) {
-    var hasPhoneState by remember { 
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    activity: MainActivity,
+) {
+    var hasPhoneState by remember {
         mutableStateOf(
             activity.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
-            activity.checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED
-        ) 
+                activity.checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED,
+        )
     }
     var shizukuActive by remember { mutableStateOf(Shizuku.pingBinder()) }
-    var shizukuGranted by remember { 
-        mutableStateOf(shizukuActive && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) 
+    var shizukuGranted by remember {
+        mutableStateOf(shizukuActive && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED)
     }
-    
+
     var simList by remember { mutableStateOf<List<SubscriptionInfo>>(emptyList()) }
     var defaultSubId by remember { mutableStateOf(-1) }
 
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                hasPhoneState = activity.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
-                                activity.checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED
-                try {
-                    shizukuActive = Shizuku.pingBinder()
-                    if (shizukuActive) {
-                        shizukuGranted = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        val observer =
+            androidx.lifecycle.LifecycleEventObserver { _, event ->
+                if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                    hasPhoneState = activity.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
+                        activity.checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED
+                    try {
+                        shizukuActive = Shizuku.pingBinder()
+                        if (shizukuActive) {
+                            shizukuGranted = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+                        }
+                    } catch (e: Exception) {
+                        shizukuActive = false
+                        shizukuGranted = false
                     }
-                } catch (e: Exception) {
-                    shizukuActive = false
-                    shizukuGranted = false
                 }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
-        
-        val binderReceivedListener = Shizuku.OnBinderReceivedListener {
-            shizukuActive = true
-            shizukuGranted = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        }
-        val binderDeadListener = Shizuku.OnBinderDeadListener {
-            shizukuActive = false
-            shizukuGranted = false
-        }
-        
+
+        val binderReceivedListener =
+            Shizuku.OnBinderReceivedListener {
+                shizukuActive = true
+                shizukuGranted = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+            }
+        val binderDeadListener =
+            Shizuku.OnBinderDeadListener {
+                shizukuActive = false
+                shizukuGranted = false
+            }
+
         Shizuku.addBinderReceivedListener(binderReceivedListener)
         Shizuku.addBinderDeadListener(binderDeadListener)
-        
+
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             Shizuku.removeBinderReceivedListener(binderReceivedListener)
@@ -132,26 +140,28 @@ fun MainScreen(modifier: Modifier = Modifier, activity: MainActivity) {
     }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         stickyHeader {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(vertical = 24.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Mobile Data Switcher",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -164,7 +174,7 @@ fun MainScreen(modifier: Modifier = Modifier, activity: MainActivity) {
             } else if (!shizukuActive) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Shizuku is not running", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
@@ -193,7 +203,7 @@ fun MainScreen(modifier: Modifier = Modifier, activity: MainActivity) {
                             SimManager.switchMobileData(sim.subscriptionId)
                             defaultSubId = sim.subscriptionId
                         }
-                    }
+                    },
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -202,32 +212,39 @@ fun MainScreen(modifier: Modifier = Modifier, activity: MainActivity) {
 }
 
 @Composable
-fun SimCardView(simName: String, phoneNumber: String?, isDefault: Boolean, onClick: () -> Unit) {
+fun SimCardView(
+    simName: String,
+    phoneNumber: String?,
+    isDefault: Boolean,
+    onClick: () -> Unit,
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDefault) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
+        colors =
+            CardDefaults.cardColors(
+                containerColor = if (isDefault) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface,
+            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
     ) {
         Row(
             modifier = Modifier.padding(24.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = simName,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isDefault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    color = if (isDefault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 )
                 if (!phoneNumber.isNullOrBlank()) {
                     Text(
                         text = phoneNumber,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                 }
             }
@@ -235,7 +252,7 @@ fun SimCardView(simName: String, phoneNumber: String?, isDefault: Boolean, onCli
                 Text(
                     text = "Active Data",
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }

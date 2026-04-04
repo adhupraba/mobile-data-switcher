@@ -15,8 +15,8 @@ object SimManager {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             try {
                 HiddenApiBypass.addHiddenApiExemptions("")
-            } catch (e: Exception) {
-                 Log.e("SimManager", "Failed to bypass hidden APIs", e)
+            } catch (e: Throwable) {
+                Log.e("SimManager", "Failed to bypass hidden APIs", e)
             }
         }
     }
@@ -31,7 +31,10 @@ object SimManager {
         }
     }
 
-    fun getPhoneNumber(context: Context, subId: Int): String? {
+    fun getPhoneNumber(
+        context: Context,
+        subId: Int,
+    ): String? {
         val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
         return try {
             if (android.os.Build.VERSION.SDK_INT >= 33) {
@@ -57,35 +60,37 @@ object SimManager {
                 val stubClass = Class.forName("com.android.internal.telephony.ISub\$Stub")
                 val asInterfaceMethod = stubClass.getDeclaredMethod("asInterface", IBinder::class.java)
                 val iSubInstance = asInterfaceMethod.invoke(null, shizukuBinder)
-                
+
                 val setDefaultDataSubIdMethod = iSubInstance.javaClass.getMethod("setDefaultDataSubId", Int::class.javaPrimitiveType)
                 setDefaultDataSubIdMethod.invoke(iSubInstance, subId)
-                
+
                 // Allow a tiny delay for the OS to finalize the SIM switch
                 Thread.sleep(100)
-                
+
                 // Use a direct Shizuku shell process to enable data.
                 // Because we just changed the default data SIM above, 'svc data enable' will turn it on for the new SIM.
                 try {
-                    val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
-                        "newProcess",
-                        Array<String>::class.java,
-                        Array<String>::class.java,
-                        String::class.java
-                    )
+                    val newProcessMethod =
+                        Shizuku::class.java.getDeclaredMethod(
+                            "newProcess",
+                            Array<String>::class.java,
+                            Array<String>::class.java,
+                            String::class.java,
+                        )
                     newProcessMethod.isAccessible = true
-                    
-                    val process = newProcessMethod.invoke(
-                        null,
-                        arrayOf("sh", "-c", "svc data enable"),
-                        null,
-                        null
-                    ) as Process
+
+                    val process =
+                        newProcessMethod.invoke(
+                            null,
+                            arrayOf("sh", "-c", "svc data enable"),
+                            null,
+                            null,
+                        ) as Process
                     process.waitFor()
                 } catch (e: Exception) {
                     Log.e("SimManager", "Failed to run svc data enable with reflection", e)
                 }
-                
+
                 return true
             } else {
                 Log.e("SimManager", "isub service is null")
