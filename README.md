@@ -62,6 +62,19 @@ By securely utilizing Shizuku's ADB-based elevated privileges, the application b
 4. Allow the **Phone Data (Read Phone State)** permission so the app can detect your network configuration.
 5. Edit your System Quick Settings panel, drag and drop the "Switch Data" tile to the top, and enjoy!
 
+## 👨‍💻 Development
+
+### Git Hooks Setup
+This repository uses custom git hooks located in the `.githooks/` directory to ensure code quality:
+*   **Pre-commit**: Automatically formats Kotlin code using `ktlint`.
+*   **Pre-push**: Executes unit tests to ensure no regressions are pushed.
+
+To activate these hooks locally, run:
+```bash
+chmod +x .githooks/*
+git config core.hooksPath .githooks
+```
+
 ## 📜 License
 
 This project is open-sourced under the MIT License. See [LICENSE](LICENSE) for more details.
