@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -24,7 +25,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -44,6 +45,23 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+ktlint {
+    android.set(true)
+    outputToConsole.set(true)
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(false)
+    filter {
+        exclude("**/generated/**")
+    }
+    additionalEditorconfig.set(
+        mapOf(
+            "max_line_length" to "500",
+            "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
+            "ktlint_standard_no-wildcard-imports" to "disabled",
+        ),
+    )
 }
 
 dependencies {

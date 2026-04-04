@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "🎨 Formatting Kotlin code..."
+./gradlew ktlintFormat --quiet
+
+if [ $? -ne 0 ]; then
+    echo "❌ Formatting failed. Commit aborted."
+    exit 1
+fi
+
+echo "✅ Code formatted."
+exit 0
