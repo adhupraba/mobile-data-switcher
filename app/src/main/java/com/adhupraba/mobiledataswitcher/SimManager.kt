@@ -11,7 +11,7 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 
 object SimManager {
-    fun init() {
+    init {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             try {
                 HiddenApiBypass.addHiddenApiExemptions("")

@@ -23,8 +23,15 @@ class SimSwitchTileService : TileService() {
         }
 
         if (!Shizuku.pingBinder()) {
-            updateTile(Tile.STATE_UNAVAILABLE, "Start Shizuku", null)
-            return
+            var retries = 0
+            while (!Shizuku.pingBinder() && retries < 15) {
+                try { Thread.sleep(50) } catch (e: Exception) {}
+                retries++
+            }
+            if (!Shizuku.pingBinder()) {
+                updateTile(Tile.STATE_UNAVAILABLE, "Start Shizuku", null)
+                return
+            }
         }
 
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
