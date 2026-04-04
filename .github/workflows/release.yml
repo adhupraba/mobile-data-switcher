@@ -52,6 +52,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Extract App Version
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName =' app/build.gradle.kts | awk -F'"' '{print $2}')
+          echo "APP_VERSION=$VERSION_NAME" >> $GITHUB_ENV
+
       - name: Build Unsigned Release APK
         run: ./gradlew assembleRelease
 
@@ -80,21 +86,15 @@ jobs:
             --ks-pass "env:STORE_PASSWORD" \
             --key-pass "env:KEY_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
-            --out mobile-data-switcher-release.apk aligned.apk
+            --out "mobile-data-switcher-${{env.APP_VERSION}}-release.apk" aligned.apk
           
           # Clean up the raw keystore from memory just to be safe
           rm keystore.jks
 
-      - name: Extract App Version
-        id: version
-        run: |
-          VERSION_NAME=$(grep 'versionName =' app/build.gradle.kts | awk -F'"' '{print $2}')
-          echo "APP_VERSION=$VERSION_NAME" >> $GITHUB_ENV
-
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: mobile-data-switcher-release.apk
+          files: "mobile-data-switcher-${{env.APP_VERSION}}-release.apk"
           tag_name: "v${{ env.APP_VERSION }}"
-          name: "Mobile Data Switcher v${{ env.APP_VERSION }}"
+          name: "v${{ env.APP_VERSION }}"
           generate_release_notes: true
