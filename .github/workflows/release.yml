@@ -85,9 +85,16 @@ jobs:
           # Clean up the raw keystore from memory just to be safe
           rm keystore.jks
 
+      - name: Extract App Version
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName =' app/build.gradle.kts | awk -F'"' '{print $2}')
+          echo "APP_VERSION=$VERSION_NAME" >> $GITHUB_ENV
+
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           files: mobile-data-switcher-release.apk
-          tag_name: release-build-${{ github.run_number }}
+          tag_name: "v${{ env.APP_VERSION }}"
+          name: "Mobile Data Switcher v${{ env.APP_VERSION }}"
           generate_release_notes: true
