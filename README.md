@@ -30,7 +30,7 @@ By securely utilizing Shizuku's ADB-based elevated privileges, the application b
 ### Prerequisites
 * [Android Studio (Jellyfish or newer)](https://developer.android.com/studio)
 * Java JDK 17+
-* [Shizuku Manager](https://shizuku.rikka.app/download/) installed on your Android device (Android 14+ compatible).
+* [Shizuku Manager](https://github.com/RikkaApps/Shizuku/releases/) installed on your Android device (Android 14+ compatible).
 
 ### Building the Project
 1. **Clone the repository:**
